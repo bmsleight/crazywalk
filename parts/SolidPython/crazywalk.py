@@ -9,10 +9,11 @@ SEGMENTS = 48
 outline_x = 640
 outline_y = 1400
 outline_z = 400
-outline_ball_lowest = outline_z - 140
 
-slat_width = 100;
-ball_interval = slat_width/2;
+
+slat_width = 90;
+ball_interval = slat_width/2
+diameter_slat_one_eighty = 300
 
 
 parts_max_multiples_of_interval = 3
@@ -71,10 +72,14 @@ def base_holder_all():
 
 
 
-def base_holder_height(height=0):
-    a = union() + bearing.support_base(height_c=100);
+def turn_nighty_all():
+    a = union();
     p = []
-    p.append(a)
+    tn = bearing.turn_nighty_bearing()
+    p.append(tn)
+    a = a + translate([1400+ball_interval/2,0,0])(rotate([0,45,0])(tn))
+    #outline_y
+    #//rotate([0,45,0]) turn_nighty_bearing();
     return (a, p)
 
 
@@ -90,6 +95,7 @@ def assembly():
     assembly = union()
     prints = []
     (assembly, prints) = build(base_holder_all, assembly, prints)
+    (assembly, prints) = build(turn_nighty_all, assembly, prints)
     return (assembly, prints)
 
 

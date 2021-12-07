@@ -11,6 +11,8 @@ layer_height = 0.4;
 
 framing_wall = 3;
 wood_width=63;
+wood_height=38;
+
 screw_near_edge=10;
 
 
@@ -64,18 +66,21 @@ module screw_hole(connector=0)
 
 module screw_hole_pair(connector=0)
 {
-        translate([screw_outer_translate,
-                    0,
-                    0]) 
-            screw_hole(connector=connector);
-        translate([-screw_outer_translate,
-                    0,
-                    0]) 
-            screw_hole(connector=connector);
+    translate([screw_outer_translate,
+                0,
+                0]) 
+        screw_hole(connector=connector);
+    translate([-screw_outer_translate,
+                0,
+                0]) 
+        screw_hole(connector=connector);
+    if(connector<3)
+    {
         cylinder(d=ball_bearing_d ,
                     h=(height_base+height_ball)*4,
                     center=true
                     );
+    }
 }
 
 
@@ -293,13 +298,118 @@ module support_base(height_c=100, length_c=50, connector=0, text="1A")
     }
 }
 
+module belt_connect_hidge(slat_w=90, slat_t=12)
+{
+    os=screw_thread_d+screw_thread_wall;
+    translate([slat_w/2+os/2+framing_wall,0,-framing_wall/2]) difference()
+    {
+        hull()
+        {
+            cylinder(d=os, h=framing_wall, center=true);
+            translate([-os/4,0,0]) cube([os/2,os, framing_wall],center=true);
+        }
+        cylinder(d=screw_thread_d,h=framing_wall*2, center=true);
+    }
+}
+
+module rounded_cube(x,y,z,r)
+{
+    hull()
+    {
+        translate([x/2-r, y/2-r, 0]) cylinder(r=r, h=z, center=true);
+        translate([x/2-r, -y/2+r, 0]) cylinder(r=r, h=z, center=true);
+        translate([-x/2+r, y/2-r, 0]) cylinder(r=r, h=z, center=true);
+        translate([-x/2+r, -y/2+r, 0]) cylinder(r=r, h=z, center=true);
+    }
+}
+
+module belt_connect(slat_w=90, slat_t=12)
+{
+    difference()
+    {
+        * cube([slat_w+framing_wall*2, slat_t+framing_wall*2, framing_wall*2], center=true);
+        rounded_cube(slat_w+framing_wall*2,
+                     slat_t+framing_wall*2,
+                     framing_wall*2,
+                     framing_wall);
+        translate([0,0,framing_wall*2]) cube([slat_w, slat_t, framing_wall*4], center=true);
+        screw_hole_pair(connector=3);
+    }
+    belt_connect_hidge();
+    rotate([0,180,0]) belt_connect_hidge();
+}
+
+
+module turn_nighty_bearing(diameter_turn=320, notch_h=100, notch_overlap=10)
+{
+    union() translate([(-diameter_turn/4)*sin(45)+notch_overlap*2/sin(45),0,0])
+    {
+        difference()
+        {
+            union()
+            {
+                for (a =[0:15:90-15])
+                {
+                    translate([0,0,-diameter_turn/2*sin(45)]) rotate([0,a+7.5-45,0]) turn_nighty_bearing_part();
+                }
+            }
+            translate([0,0,-diameter_turn/2])  cube([diameter_turn,screw_outer*4,diameter_turn], center=true);
+            //Notch
+            translate([0,0,-diameter_turn/2*sin(45)])  
+             rotate([0,45,0]) 
+              translate([-diameter_turn/2+notch_h+notch_overlap,0,notch_h+notch_overlap])  
+                    cube([notch_overlap*2,notch_overlap*4,notch_overlap*2], center=true);
+        }
+        
+         translate([0,0,-diameter_turn/2*sin(45)])  
+             rotate([0,45,0]) 
+              translate([-diameter_turn/2+notch_h-framing_wall/2,wood_width/2-(ball_bearing_d+ball_bearing_wall*2)/2,notch_h+notch_overlap]) 
+                {
+                    difference()
+                    {
+                        cube([framing_wall,wood_width,notch_overlap*2], center=true);
+                       translate([0,(ball_bearing_d+ball_bearing_wall*2)/2,0]) rotate([90,0,0]) rotate([0,90,0]) screw_hole_pair(connector=3);
+                    }
+                    translate([-wood_width/2,0,(framing_wall-notch_overlap*2)/2]) 
+                    difference()
+                    {
+                        cube([wood_width,wood_width,framing_wall], center=true);
+                        rotate([0,0,45]) translate([wood_width,wood_width,]) cube([wood_width*4,wood_width*2,framing_wall*4], center=true);
+                    }
+                }
+            }
+}
+
+
+module turn_nighty_bearing_part(diameter_turn=320)
+{
+    translate([0,0,diameter_turn/2]) base_holder();
+    difference()
+    {
+        translate([0,0,diameter_turn/4]) 
+            cube([diameter_turn/4,
+                  (ball_bearing_d+ball_bearing_wall*2),
+                  diameter_turn/2], center=true);
+        
+        rotate([0,15/2,0])
+            translate([diameter_turn/8,0,diameter_turn/4]) 
+            cube([diameter_turn/4,
+                  (ball_bearing_d+ball_bearing_wall*2)*2,
+                  diameter_turn], center=true);
+        rotate([0,-15/2,0])
+            translate([-diameter_turn/8,0,diameter_turn/4]) 
+            cube([diameter_turn/4,
+                  (ball_bearing_d+ball_bearing_wall*2)*2,
+                  diameter_turn], center=true);
+    }
+}
 
 
 
-
-*color("red") translate([16,0,6]) cylinder(d=8, h=5);
 *ball_bearing();
-;
-*support_base(height_c=3, connector=0,length_c=100);
-*color("red") translate([50,0,0])  support_base(height_c=51, connector=0);
-*translate([0,-(ball_bearing_d+ball_bearing_wall*2)/2,0]) cube([20, 63,10]);
+*bearing_shell();
+*support_base();
+belt_connect();
+*rounded_cube(90,16,12,5);
+*rotate([0,45,0]) turn_nighty_bearing();
+*turn_nighty_bearing();
