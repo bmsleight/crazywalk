@@ -1,5 +1,5 @@
 $fn=48;
-ball_bearing_d = 16+.25;
+ball_bearing_d = 16+.25+.25;
 height_ball = 0.5;
 ball_bearing_wall = 2;
 
@@ -154,7 +154,22 @@ module base_holder(){
     screw_mount(connector=2);
 }
 
-// Used by python scripts
+module struts(size=45)
+{
+    translate([size/2,-8.25,size/2-size])
+    {
+        difference()
+        {
+            union()
+            {
+                rotate([0,45,0]) cube([size*2,3,3], center=true);
+                rotate([0,-45,0]) cube([size*2,3,3], center=true);
+            }
+            translate([0,0,-size]) cube([size*4,size,size], center=true);
+            translate([0,0,size]) cube([size*4,size,size], center=true);
+        }
+    }
+}
 
 
 
@@ -168,7 +183,7 @@ module support_base(height_c=100, length_c=50, connector=0, text="1A")
     translate([0,0,top_support]) base_holder();
 
     // Min screw length m5=30 allow 10 to manimulate
-    if(height_c<40)
+    if(height_c<30)
     {
         scale_z = top_support/(screw_mount_h);
         scale([1,1,scale_z]) screw_mount();
@@ -296,6 +311,11 @@ module support_base(height_c=100, length_c=50, connector=0, text="1A")
             }
         }
     }
+    // To add struts to tall supports
+    if(connector==0 && height_c>length_c)
+    {
+        translate([0,0,height_c]) struts(length_c);
+    }
 }
 
 module belt_connect_hidge(slat_w=90, slat_t=12)
@@ -339,10 +359,15 @@ module belt_connect(slat_w=90, slat_t=12)
     rotate([0,180,0]) belt_connect_hidge();
 }
 
+module turn_nighty_bearing_start(diameter_turn=320, notch_h=100, notch_overlap=10)
+{
+    rotate([0,45,0]) translate([0,0,-notch_overlap*2]) rotate([0,-45,0]) mirror([0,0,0]) turn_nighty_bearing(diameter_turn=diameter_turn, notch_h=(diameter_turn/2)-notch_h-(notch_overlap*2), notch_overlap=notch_overlap);
+}
+
 
 module turn_nighty_bearing(diameter_turn=320, notch_h=100, notch_overlap=10)
 {
-    union() translate([(-diameter_turn/4)*sin(45)+notch_overlap*2/sin(45),0,0])
+    union() translate([diameter_turn*sin(45)/2-(notch_h/sin(45)),0,0])
     {
         difference()
         {
@@ -412,4 +437,5 @@ module turn_nighty_bearing_part(diameter_turn=320)
 belt_connect();
 *rounded_cube(90,16,12,5);
 *rotate([0,45,0]) turn_nighty_bearing();
-*turn_nighty_bearing();
+*turn_nighty_bearing(notch_h=160-20-10);
+*turn_nighty_bearing_start(notch_h=10);
