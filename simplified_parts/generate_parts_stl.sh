@@ -13,7 +13,7 @@ for MIRROR in false true
 do
     for PART in bearing_shell turn_support_inner_split_no_guide \
                 turn_support_inner_split turn_support_outer_start \
-                turn_support_outer_end
+                turn_support_outer_end_under turn_support_outer_end 
     do 
         openscad -o ./stl/${PART}_Mirror_${MIRROR}.stl -D 'part="'$PART'"' -D 'mirror='${MIRROR} ./crazywalk_parts_select_part.scad 
     done

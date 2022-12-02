@@ -314,7 +314,7 @@ module support_base(interval=interval_blocks, blocks=8, length_top=length_top, o
 }
 
 
-module turn_support_outer(turn_r=inner_turn_r, interval=interval_blocks, z=0)
+module turn_support_outer(turn_r=inner_turn_r, interval=interval_blocks, z=0, short_support=true)
 {
     
     translate([cylinder_d/2,-interval,-turn_r+zfromx(z)]) rotate([-45,0,0]) difference()
@@ -331,21 +331,38 @@ module turn_support_outer(turn_r=inner_turn_r, interval=interval_blocks, z=0)
             // circle to link all above rotations
             rotate([0,90,0]) cylinder(h=base_holder_width, r=turn_r-ball_bearing_wall, center=true);
             // Support to timber
-            echo(zfromx(z+900)) 
-            rotate([-45,0,0]) translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0]) cube([timber_construct_h, framing_wall,interval]);
-            rotate([-45,0,0]) translate([-cylinder_d/2,-(turn_r-zfromx(z)+framing_wall),interval]) cube([timber_construct_h, +turn_r-zfromx(z)+framing_wall,framing_wall]); 
+            if(short_support) 
+            {
+                rotate([-45,0,0]) translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0]) cube([timber_construct_h, framing_wall,interval]);
+                rotate([-45,0,0]) translate([-cylinder_d/2,-(turn_r-zfromx(z)+framing_wall),interval]) cube([timber_construct_h, +turn_r-zfromx(z)+framing_wall,framing_wall]); 
+            }
+            else 
+            {
+                rotate([-45,0,0]) translate([-cylinder_d/2,-(turn_r-zfromx(z)+framing_wall),interval-timber_construct_w]) cube([timber_construct_h, +turn_r-zfromx(z)+framing_wall,framing_wall+timber_construct_w]); 
+                rotate([-45,0,0]) translate([-cylinder_d/2,-(turn_r-zfromx(z)+framing_wall),interval]) cube([timber_construct_h+timber_construct_w, +turn_r-zfromx(z)+framing_wall,framing_wall]); 
+            }
         }
         rotate([45,0,0]) translate([0,0,-turn_r]) cube(turn_r*2,center=true);
         rotate([-45,0,0]) 
         {
             translate([0,0,-turn_r]) cube(turn_r*2,center=true);
-            translate([-base_holder_width,-1*(turn_r-zfromx(z)), -interval]) cube([base_holder_width*2, 2*(turn_r-zfromx(z)),  interval*2]);
+            if(short_support) translate([-base_holder_width,-1*(turn_r-zfromx(z)), -interval]) cube([base_holder_width*2, 2*(turn_r-zfromx(z)),  interval*2]);
             // Cut bottom of circle
             translate([-cylinder_d/2,turn_r/2,0]) rotate([-45,0,0]) cube([turn_r*2, turn_r*2,turn_r*2], center=true);
             // Scrrew holes
-            translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0])  translate([timber_construct_h-framing_wall*7,0,interval-framing_wall*2.5]) rotate([90,0,0]) cylinder(h=framing_wall*4,d=screw_thread_d, center=true);
-            // Scrrew holes
-            translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0])  translate([timber_construct_h-framing_wall*3,0,interval-framing_wall*1.5]) rotate([90,0,0]) cylinder(h=framing_wall*4,d=screw_thread_d, center=true);
+            if(short_support) 
+            {
+                translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0])  translate([timber_construct_h-framing_wall*7,0,interval-framing_wall*2.5]) rotate([90,0,0]) cylinder(h=framing_wall*4,d=screw_thread_d, center=true);
+                // Scrrew holes
+                translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0])  translate([timber_construct_h-framing_wall*3,0,interval-framing_wall*1.5]) rotate([90,0,0]) cylinder(h=framing_wall*4,d=screw_thread_d, center=true);
+            }
+            else
+            {
+                translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0])  translate([timber_construct_h+timber_construct_w-framing_wall*7,framing_wall*8,interval-framing_wall*3.5]) rotate([0,0,0]) cylinder(h=timber_construct_w,d=screw_thread_d, center=true);
+                // Scrrew holes
+                translate([-cylinder_d/2,-turn_r+zfromx(z)-framing_wall,0])  translate([timber_construct_h+timber_construct_w-framing_wall*3,framing_wall*3,interval-framing_wall*7]) rotate([0,0,0]) cylinder(h=timber_construct_w*2,d=screw_thread_d, center=true);
+            }
+                
         }
 
     // Reduce plastic to print
@@ -359,9 +376,9 @@ module turn_support_outer_start()
     turn_support_outer(interval=interval_blocks, z=0);
 }
 
-module turn_support_outer_end()
+module turn_support_outer_end(short_support=true)
 {
-    mirror([0,1,0]) turn_support_outer(interval=interval_blocks*4, z=length_top-(interval_blocks*4));
+    mirror([0,1,0]) turn_support_outer(interval=interval_blocks*4, z=length_top-(interval_blocks*4), short_support=short_support);
 }
 
 
@@ -438,29 +455,36 @@ module turn_support_inner_split(turn_r=160, interval=interval_blocks, z=0, guide
 
 module turn_support_inner_split_reconstruct(turn_r=160, interval=interval_blocks, z=0)
 {
-inner_r = 160+ball_bearing_d+slant_thickness;
+inner_r = turn_r+ball_bearing_d+slant_thickness;
 
 translate([cylinder_d/2,0,+inner_r+screw_mount_h*3/2])turn_support_inner_split();
 translate([cylinder_d/2,0,+inner_r+screw_mount_h*3/2])
-    rotate([270,0,180])turn_support_inner_split(guide=false);
-  
+    rotate([270,0,180])turn_support_inner_split(guide=false);  
 }
 
+module turn_support_inner_split_reconstruct_offset(turn_r=160, interval=interval_blocks, z=0)
+{
+inner_r = turn_r+ball_bearing_d+slant_thickness;
+    translate([0,-inner_r,0]) turn_support_inner_split_reconstruct();
+}
 
-
+module turn_support_outer_end_under()
+{
+     mirror([0,1,0]) turn_support_outer_end(short_support=false);
+}
 
 *turn_support_inner_split();
 *turn_support_inner_split(guide=false);
 *turn_support_inner_split_reconstruct();
 
 //screw_mount_h
-*rotate([45,0,45]) turn_support_outer_start();
-*rotate([-45,0,45]) turn_support_outer_end();
+rotate([45,0,45]) turn_support_outer_start();
+*rotate([45,0,-45]) turn_support_outer_end_under();
 
 
 
-support_base(piece=0);
+*support_base(piece=0);
 *support_base(piece=0, heights=false);
-base_holder();
+*base_holder();
 *bearing_shell();
 *ball_bearing() ;

@@ -35,5 +35,9 @@ if(part=="turn_support_outer_start")
 if(part=="turn_support_outer_end")
     apply_mirror() rotate([-45,0,45]) turn_support_outer_end();
 
+if(part=="turn_support_outer_end_under")
+    apply_mirror() rotate([45,0,-45]) turn_support_outer_end_under();
+
 if(part=="support_base")
     apply_mirror() support_base(piece=piece, heights=heights);
+

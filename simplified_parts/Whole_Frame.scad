@@ -61,8 +61,8 @@ module timber_length_n(length, direction=1, comment="", edges=true)
     {
         color("Goldenrod") cube([length, timber_construct_w, timber_construct_h], center=true);
         // Ends
-        color("SaddleBrown") translate([-length/2, 0,0]) cube([0.1, timber_construct_w, timber_construct_h], center=true);
-        color("SaddleBrown") translate([length/2, 0,0]) cube([0.1, timber_construct_w, timber_construct_h], center=true);        
+        * color("SaddleBrown") translate([-length/2, 0,0]) cube([0.1, timber_construct_w, timber_construct_h], center=true);
+        * color("SaddleBrown") translate([length/2, 0,0]) cube([0.1, timber_construct_w, timber_construct_h], center=true);        
         if(edges) 
         {
             color("White") translate([-length/2, timber_construct_w/2,0]) cube([line_t, line_t, timber_construct_h], center=true); 
@@ -150,7 +150,7 @@ module turnNightyInsidePosition()
     frame5Position() translate([0,-timber_construct_h,0]) rotate([0,0,90])  children();
 }
 
-module turnNightyInsideFarEndPosition() 
+module turnNightyOuterFarEndPosition() 
 {
     frame3Position()  translate([length_top,0,0])
     children();
@@ -162,7 +162,12 @@ module lowerBaringPosition()
     children();
 }
 
-
+module turnNightyInsideFarEndPosition() 
+{
+    frame3Position() rotate([0,0,90]) translate([-0,
+    -length_top,-bearing_height+timber_construct_w*2]) 
+    mirror([0,1,0]) children();
+}
 
 module frame_3A()
 {
