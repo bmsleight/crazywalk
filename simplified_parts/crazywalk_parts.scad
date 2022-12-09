@@ -473,12 +473,45 @@ module turn_support_outer_end_under()
      mirror([0,1,0]) turn_support_outer_end(short_support=false);
 }
 
+module belt_connect_hidge(slat_w=90, slat_t=18)
+{
+    os=screw_thread_d+screw_thread_wall;
+    translate([slat_w/2+os/2+framing_wall,0,-framing_wall/2]) difference()
+    {
+        hull()
+        {
+            cylinder(d=os, h=framing_wall, center=true);
+            translate([-os/2,0,0]) cube([os,os, framing_wall],center=true);
+        }
+        cylinder(d=screw_thread_d,h=framing_wall*2, center=true);
+    }
+}
+
+module belt_connect(slat_w=90, slat_t=18)
+{
+    difference()
+    {
+        union()
+        {
+            squircle([slat_w+framing_wall*2, slat_t+framing_wall*2, framing_wall*2], center=true);
+            belt_connect_hidge();
+            rotate([0,180,0]) belt_connect_hidge();
+        }
+        translate([0,0,framing_wall*2]) cube([slat_w, slat_t, framing_wall*4], center=true);
+        translate([0,0,screw_mount_h/2]) rotate([0,180,0]) screw_hole_pair(countersunk=true, ball_hole=false, shell_hole=false);
+        cylinder(h=framing_wall*4, r=radius_base, center=true);
+    }
+}
+
+belt_connect();
+
+
 *turn_support_inner_split();
 *turn_support_inner_split(guide=false);
 *turn_support_inner_split_reconstruct();
 
 //screw_mount_h
-rotate([45,0,45]) turn_support_outer_start();
+*rotate([45,0,45]) turn_support_outer_start();
 *rotate([45,0,-45]) turn_support_outer_end_under();
 
 
